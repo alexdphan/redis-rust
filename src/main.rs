@@ -14,7 +14,7 @@ fn main() {
     for stream in listener.incoming() {
         match stream {
             Ok(mut stream) => {
-                let mut buffer = [0; 1024];
+                let mut buffer = [0];
                 stream.read(&mut buffer).unwrap();
                 stream.write(buffer.as_ref()).unwrap();
             }
