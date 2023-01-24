@@ -14,12 +14,11 @@ fn main() {
     for stream in listener.incoming() {
         match stream {
             Ok(mut stream) => {
-                let mut buffer = [0];
+                let mut buffer = "Hello, World!".to_string().into_bytes();
                 stream.read(&mut buffer).unwrap();
                 stream.write(buffer.as_ref()).unwrap();
                 println!("{}", String::from_utf8_lossy(&buffer));
                 // convert the buffer to a string
-
             }
             Err(e) => {
                 println!("error: {}", e);
