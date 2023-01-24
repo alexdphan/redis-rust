@@ -15,11 +15,18 @@ fn main() {
         match stream {
             Ok(mut stream) => {
                 println!("New client connected");
-                
-                // Wait for the client to send us a message but ignore the content for now
                 let mut buffer = [0; 1024];
-                stream.read(&mut buffer).unwrap();
-                stream.write("+PONG\r\n".as_bytes()).unwrap();
+
+                loop {
+                    let bytes_read = stream.read(&mut buffer).unwrap();
+                    if bytes_read == 0 {
+                        break;
+                    }
+                    println!("Received: {}", String::from_utf8_lossy(&buffer[..bytes_read]));
+                }
+                // // Wait for the client to send us a message but ignore the content for now
+                // stream.read(&mut buffer).unwrap();
+                // stream.write("+PONG\r\n".as_bytes()).unwrap();
 
             }
             Err(e) => {
