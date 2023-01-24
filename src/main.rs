@@ -14,7 +14,7 @@ fn main() {
     for stream in listener.incoming() {
         match stream {
             Ok(mut stream) => {
-                let mut buffer = "Hello, World!".to_string().into_bytes();
+                let mut buffer = "hello";
                 stream.read(&mut buffer).unwrap();
                 stream.write(buffer.as_ref()).unwrap();
                 println!("{}", String::from_utf8_lossy(&buffer));
