@@ -14,11 +14,13 @@ fn main() {
     for stream in listener.incoming() {
         match stream {
             Ok(mut stream) => {
-                let mut buffer = "hello";
+                println!("New client connected");
+                
+                // Wait for the client to send us a message but ignore the content for now
+                let mut buffer = [0; 1024];
                 stream.read(&mut buffer).unwrap();
-                stream.write(buffer.as_ref()).unwrap();
-                println!("{}", String::from_utf8_lossy(&buffer));
-                // convert the buffer to a string
+                stream.write("+PONG\r\n".as_bytes()).unwrap();
+
             }
             Err(e) => {
                 println!("error: {}", e);
