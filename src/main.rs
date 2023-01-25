@@ -30,7 +30,7 @@ async fn main() -> Result<()> {
 
 // TcpStream is a wrapper around a socket, used to read and write data (argument)
 // async function that returns a Result
-async fn handle_connection(stream: TcpStream) -> Result<()> {
+async fn handle_connection(mut stream: TcpStream) -> Result<()> {
     // create a buffer to store the data we read from the socket
     // BytesMut is a type from the bytes crate that provides a mutable buffer of bytes
     // represent a unique viet into a potentially shared memory region
@@ -42,7 +42,7 @@ async fn handle_connection(stream: TcpStream) -> Result<()> {
     // These changes allow Tokio to suspend and resume our connection handler at the right times, and do work on tasks for other clients while ours is suspended.
     loop {
         // wait for client to send us a message but ignore the content for now
-        let bytes_read = stream.read(&mut buf).await?;
+        let bytes_read = stream.read_buf(&mut buf).await?;
         if bytes_read == 0 {
             println!("client closed the connection");
             break;
