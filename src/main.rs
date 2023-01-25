@@ -14,11 +14,11 @@ async fn main() -> Result<()> {
     loop {
         let incoming = listener.accept().await;
         match incoming {
-            Ok((mut stream, _)) => {
+            Ok((stream, _)) => {
                 println!("accepted new connection");
 
                 tokio::spawn(async move {
-                    handle_connection(&mut stream).await.unwrap();
+                    handle_connection(stream).await.unwrap();
                 });
             }
             Err(e) => {
@@ -30,7 +30,7 @@ async fn main() -> Result<()> {
 
 // TcpStream is a wrapper around a socket, used to read and write data (argument)
 // async function that returns a Result
-async fn handle_connection(stream: &mut TcpStream) -> Result<()> {
+async fn handle_connection(stream: TcpStream) -> Result<()> {
     // create a buffer to store the data we read from the socket
     // BytesMut is a type from the bytes crate that provides a mutable buffer of bytes
     // represent a unique viet into a potentially shared memory region
