@@ -1,19 +1,24 @@
 // Uncomment this block to pass the first stage
-use std::net::{TcpListener, TcpStream};
-use std::{io::Read, io::Write};
+use anyhow::Result;
+use bytes::BytesMut;
+use tokio::io::{AsyncReadExt, AsyncWriteExt};
+use tokio::net::{TcpListener, TcpStream};
 
+// to let Tokio start a runtime before our main function does any work.
 #[tokio::main]
-fn main() {
-   async fn main() -> Result<()> {
-    let mut listener = TcpListener::bind("127.0.0.1:6379").await?;
-
+// async function that returns a Result
+async fn main() -> Result<()> {
+    let listener = TcpListener::bind("127.0.0.1:6379").await?;
+    // assigns listener to TcpListener::bind()
+    // bind() returns a Result<TcpListener, io::Error>
     loop {
         let incoming = listener.accept().await;
         match incoming {
-            Ok((mut stream, _)) => {
+            Ok((stream, _)) => {
                 println!("accepted new connection");
+
                 tokio::spawn(async move {
-                    handle_connection(&mut stream).await.unwrap();
+                    handle_connection(stream).await.unwrap();
                 });
             }
             Err(e) => {
@@ -23,12 +28,16 @@ fn main() {
     }
 }
 
-async fn handle_connection(mut stream: TcpStream) -> Result<()> {
-    let mut buf = BytesMut::with_capacity(512);
+// TcpStream is a wrapper around a socket, used to read and write data (argument)
+// async function that returns a Result
+async fn handle_connection(stream: &mut TcpStream) -> Result<()> {
+    let mut buf = [0, 512];
 
+    // read and write calls are await ed
+    // These changes allow Tokio to suspend and resume our connection handler at the right times, and do work on tasks for other clients while ours is suspended.
     loop {
-        // Wait for the client to send us a message but ignore the content for now
-        let bytes_read = stream.read_buf(&mut buf).await?;
+        // wait for client to send us a message but ignore the content for now
+        let bytes_read = stream.read(&mut buf).await?;
         if bytes_read == 0 {
             println!("client closed the connection");
             break;
@@ -36,6 +45,5 @@ async fn handle_connection(mut stream: TcpStream) -> Result<()> {
 
         stream.write("+PONG\r\n".as_bytes()).await?;
     }
-
     Ok(())
 }
