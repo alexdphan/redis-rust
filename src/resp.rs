@@ -142,7 +142,7 @@
 // }
 
 // // function decode_array is for decoding the array from the buffer and returning a Result of an Option of a Value and a usize
-// fn decode_array(buffer: BytesMut) -> Result<Option<(Value, usize)>> {    
+// fn decode_array(buffer: BytesMut) -> Result<Option<(Value, usize)>> {
 //     let (array_length, mut bytes_consumed) =
 //         if let Some((line, len)) = read_until_crlf(&buffer[1..]) {
 //             let array_length = parse_integer(line)?;
@@ -164,7 +164,6 @@
 
 //     return Ok(Some((Value::Array(items), bytes_consumed)));
 // }
-
 
 // // function decode_bulk_string is for decoding the bulk string from the buffer and returning a Result of an Option of a Value and a usize
 // fn decode_bulk_string(buffer: BytesMut) -> Result<Option<(Value, usize)>> {
@@ -267,7 +266,7 @@ pub struct RespConnection {
 impl RespConnection {
     pub fn new(stream: TcpStream) -> Self {
         return RespConnection {
-            stream, 
+            stream,
             buffer: BytesMut::with_capacity(512),
         };
     }
@@ -297,15 +296,15 @@ impl RespConnection {
 fn parse_message(buffer: BytesMut) -> Result<Option<(Value, usize)>> {
     match buffer[0] as char {
         '+' => decode_simple_string(buffer),
-        '-' => decode_array(buffer),
+        '*' => decode_array(buffer),
         '$' => decode_bulk_string(buffer),
-        _ => Err(Error::msg("unrecognised message type"))
+        _ => Err(Error::msg("unrecognised message type")),
     }
 }
 
 fn decode_simple_string(buffer: BytesMut) -> Result<Option<(Value, usize)>> {
-if let Some((line, len)) = read_until_crlf(&buffer[1..]) {
-            let str = parse_string(line)?;
+    if let Some((line, len)) = read_until_crlf(&buffer[1..]) {
+        let str = parse_string(line)?;
 
         Ok(Some((Value::SimpleString(str), len + 1)))
     } else {
@@ -314,13 +313,14 @@ if let Some((line, len)) = read_until_crlf(&buffer[1..]) {
 }
 
 fn decode_array(buffer: BytesMut) -> Result<Option<(Value, usize)>> {
-    let (array_length, mut bytes_consumed) = if let Some((line, len)) = read_until_crlf(&buffer[1..]) {
-        let array_length = parse_integer(line)?;
+    let (array_length, mut bytes_consumed) =
+        if let Some((line, len)) = read_until_crlf(&buffer[1..]) {
+            let array_length = parse_integer(line)?;
 
-        (array_length, len + 1)
-    } else {
-        return Ok(None);
-    };
+            (array_length, len + 1)
+        } else {
+            return Ok(None);
+        };
 
     let mut items: Vec<Value> = Vec::new();
     for _ in 0..array_length {
@@ -336,7 +336,7 @@ fn decode_array(buffer: BytesMut) -> Result<Option<(Value, usize)>> {
 
 fn decode_bulk_string(buffer: BytesMut) -> Result<Option<(Value, usize)>> {
     let (bulk_length, bytes_consumed) = if let Some((line, len)) = read_until_crlf(&buffer[1..]) {
-            let bulk_length = parse_integer(line)?;
+        let bulk_length = parse_integer(line)?;
 
         (bulk_length, len + 1)
     } else {
@@ -361,8 +361,8 @@ fn read_until_crlf(buffer: &[u8]) -> Option<(&[u8], usize)> {
             return Some((&buffer[0..(i - 1)], i + 1));
         }
     }
-    return None;        
-    }
+    return None;
+}
 
 fn parse_string(bytes: &[u8]) -> Result<String> {
     String::from_utf8(bytes.to_vec()).map_err(|_| Error::msg("Could not parse string"))
