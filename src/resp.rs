@@ -6,10 +6,17 @@ const CARRIAGE_RETURN: u8 = '\r' as u8;
 const NEWLINE: u8 = '\n' as u8;
 
 #[derive(Eq, PartialEq, Clone, Debug)]
+// These values are according to the RESP protocol
 pub enum Value {
+    /// Nulk bulk reply, `$-1\r\n`, this reponse is like this because the first byte of the reply is "$", and the second byte is "-". 
+    Null,
+    /// For Simple Strings the first byte of the reply is "+"
     SimpleString(String),
+    /// For Errors the first byte of the reply is "-"
     Error(String),
+    /// For Bulk Strings the first byte of the reply is "$"
     BulkString(String),
+    /// For Arrays the first byte of the reply is "*"
     Array(Vec<Value>),
 }
 
@@ -32,8 +39,10 @@ impl Value {
             _ => panic!("not a bulk string"),
         }
     }
+    // encode function is for encoding the value to a RESP string because the RESP protocol is a text-based protocol
     pub fn encode(self) -> String {
         match &self {
+            Value::Null => "$-1\r\n".to_string(),
             Value::SimpleString(s) => format!("+{}\r\n", s.as_str()),
             Value::Error(msg) => format!("-{}\r\n", msg.as_str()),
             Value::BulkString(s) => format!("${}\r\n{}\r\n", s.len(), s.as_str()),
