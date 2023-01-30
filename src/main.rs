@@ -79,15 +79,24 @@ async fn handle_connection(stream: TcpStream, client_store: Arc<Mutex<Store>>) -
                     if let (Some(BulkString(key)), Some(BulkString(value))) =
                         (args.get(0), args.get(1))
                     {
-                        // this would be set to the key and value in client_store
-                        client_store.lock().unwrap().set(key.clone(), value.clone());
-                        SimpleString("OK".to_string())
+                    if let (Some(BulkString(_)), Some(BulkString(amount))) = (args.get(2), args.get(3))
+                    {
+                        client_store.lock().unwrap().set_with_expiry(
+                            key.clone(),
+                            value.clone(),
+                            amount.parse::<u64>()?,
+                        );
                     } else {
-                        Error("Set requires two arguments".to_string())
+                        client_store.lock().unwrap().set(key.clone(), value.clone());
                     }
-                }
+  SimpleString("OK".to_string())
+                } else {
+                                        Error("Set requires two arguments".to_string());
+                                        Error("Set requires two or four arguments".to_string())
+        }
+    }
                 _ => Error(format!("command not implemented: {}", command)),
-            };
+    };
             // write_value() returns a future that will resolve to a Result<(), io::Error>
             // this would write the response to the client, and then wait for the next command
             conn.write_value(response).await?;
@@ -95,7 +104,6 @@ async fn handle_connection(stream: TcpStream, client_store: Arc<Mutex<Store>>) -
             break;
         }
     }
-
     Ok(())
 }
-// overall, this function would read the value from the client, and then write the response to the client
+// overall, 
