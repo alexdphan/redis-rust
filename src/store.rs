@@ -18,6 +18,7 @@ struct Entry {
     value: String,
 }
 
+// implementation of the Store struct, which is the key-value store, which is a hashmap that maps strings to Entry structs
 impl Store {
     pub fn new() -> Self {
         Store {
@@ -25,19 +26,25 @@ impl Store {
         }
     }
 
+    // function that sets the key-value pair, without an expiration time, which is the default, so we set the expiration time to None
     pub fn set(&mut self, key: String, value: String) {
         let entry = Entry { t: None, value };
         self.data.insert(key, entry);
     }
 
+    // function that sets the key-value pair with an expiration time
     pub fn set_with_expiry(&mut self, key: String, value: String, expiry_ms: u64) {
+      // assigns entry to a new Entry struct with the value of value and the expiration time of Instant::now() + Duration::from_millis(expiry_ms)
         let entry = Entry {
             t: Some(Instant::now() + Duration::from_millis(expiry_ms)),
+            // value is the value of the key-value pair
             value,
         };
+        // insert the key-value pair into the hashmap, which is the data field of the Store struct, which is the key-value store
         self.data.insert(key, entry);
     }
 
+    // function that gets the value of the key-value pair
     pub fn get(&mut self, key: String) -> Option<String> {
         // self.data.get(key.as_str()).cloned()
         match self.data.get(key.as_str()) {
@@ -49,8 +56,10 @@ impl Store {
                         return None;
                     }
                 }
+                // return the value of the key-value pair
                 Some(entry.value.clone())
             }
+            // if the key-value pair is not found, return None
             None => None,
         }
     }

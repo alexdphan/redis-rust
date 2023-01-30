@@ -79,24 +79,29 @@ async fn handle_connection(stream: TcpStream, client_store: Arc<Mutex<Store>>) -
                     if let (Some(BulkString(key)), Some(BulkString(value))) =
                         (args.get(0), args.get(1))
                     {
-                    if let (Some(BulkString(_)), Some(BulkString(amount))) = (args.get(2), args.get(3))
-                    {
-                        client_store.lock().unwrap().set_with_expiry(
-                            key.clone(),
-                            value.clone(),
-                            amount.parse::<u64>()?,
-                        );
+                        // if the third and fourth arguments are Some BulkString(_), and Some BulkString(amount), then set the key and value in client_store to lock() and unwrap(), and return SimpleString("OK")
+                        if let (Some(BulkString(_)), Some(BulkString(amount))) =
+                            (args.get(2), args.get(3))
+                        {
+                            // set_with_expiry() returns a future that will resolve to a Result<(), io::Error>, taking in key, value, and amount
+                            // amount is the time in seconds that the key should be stored for, which is parsed to u64, then it will be set in client_store and return SimpleString("OK"). Once used, the key will be deleted
+                            client_store.lock().unwrap().set_with_expiry(
+                                key.clone(),
+                                value.clone(),
+                                amount.parse::<u64>()?,
+                            );
+                        } else {
+                            // set() returns a future that will resolve to a Result<(), io::Error>, taking in key and value
+                            client_store.lock().unwrap().set(key.clone(), value.clone());
+                        }
+                        SimpleString("OK".to_string())
                     } else {
-                        client_store.lock().unwrap().set(key.clone(), value.clone());
+                        Error("Set requires two arguments".to_string());
+                        Error("Set requires two or four arguments".to_string())
                     }
-  SimpleString("OK".to_string())
-                } else {
-                                        Error("Set requires two arguments".to_string());
-                                        Error("Set requires two or four arguments".to_string())
-        }
-    }
+                }
                 _ => Error(format!("command not implemented: {}", command)),
-    };
+            };
             // write_value() returns a future that will resolve to a Result<(), io::Error>
             // this would write the response to the client, and then wait for the next command
             conn.write_value(response).await?;
@@ -106,4 +111,4 @@ async fn handle_connection(stream: TcpStream, client_store: Arc<Mutex<Store>>) -
     }
     Ok(())
 }
-// overall, 
+// overall,
